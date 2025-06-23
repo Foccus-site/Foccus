@@ -29,9 +29,10 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             overflow-x: hidden; /* Prevent horizontal scrolling */
-            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="blue" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l16 16M4 20l16-16"/></svg>') 12 12, auto; /* Blue X cursor */
+            /* Custom blue X cursor (SVG data URI) */
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="blue" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l16 16M4 20l16-16"/></svg>') 12 12, auto;
             /* Fallback for browsers that don't support custom SVG cursors */
-            cursor: pointer; /* A standard pointer that looks blue on many systems */
+            cursor: pointer;
         }
 
         /* Custom Keyframe Animations */
@@ -66,11 +67,17 @@
             0% { opacity: 0; transform: scale(0.8); }
             100% { opacity: 1; transform: scale(1); }
         }
-        /* Blinking effect for live button */
+        /* Blinking effect for live button and popup */
         @keyframes blink {
             0%, 100% { opacity: 1; }
             50% { opacity: 0; }
         }
+        /* Popup entrance animation (centered) */
+        @keyframes popupOpenCenter {
+            from { opacity: 0; transform: translate(-50%, -70%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
+        }
+
 
         /* Animation classes */
         .animate-fade-in-up { animation: fadeInUp 1s ease-out forwards; }
@@ -87,6 +94,7 @@
         }
         .animate-zoom-in-fade-in { animation: zoomInFadeIn 1s ease-out forwards 0.5s; } /* Added delay for smooth transition */
         .animate-blink { animation: blink 1s infinite; }
+        .animate-popup-open-center { animation: popupOpenCenter 0.5s ease-out forwards; }
 
 
         /* Specific animation delays for blobs */
@@ -139,6 +147,45 @@
             border-radius: 50%;
             animation: blink 1s infinite;
         }
+
+        /* Popup styling */
+        .live-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #c00;
+            color: white;
+            padding: 20px 30px; /* Increased padding for larger size */
+            border-radius: 15px; /* Slightly more rounded */
+            font-size: 1.8rem; /* Larger font size */
+            font-weight: bold;
+            z-index: 1000; /* Ensure it's on top of everything */
+            display: flex;
+            align-items: center;
+            justify-content: center; /* Center content horizontally */
+            gap: 15px; /* More space between dot and text */
+            box-shadow: 0 8px 25px rgba(0,0,0,0.6); /* More prominent shadow */
+            cursor: pointer; /* Indicate it's clickable */
+            opacity: 0; /* Hidden by default for animation */
+        }
+        .live-popup .live-dot {
+            background-color: white; /* Make dot white for contrast */
+            width: 15px; /* Larger dot */
+            height: 15px;
+        }
+
+        /* Overlay for disabling background interaction */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent black */
+            z-index: 999; /* Below popup, above content */
+            display: none; /* Hidden by default */
+        }
     </style>
 </head>
 <body class="font-inter bg-black text-white min-h-screen antialiased overflow-x-hidden">
@@ -154,11 +201,11 @@
                     Home
                     <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-white group-hover:w-full transition-all duration-300"></span>
                 </a>
-                <a href="#" class="text-lg font-medium text-white hover:text-gray-300 transition-colors duration-200 relative group" onclick="navigateTo('features'); return false;">
+                <a href="#" class="text-lg font-medium text-white hover:text-gray-300 transition-colors duration-300 relative group" onclick="navigateTo('features'); return false;">
                     Features
                     <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-white group-hover:w-full transition-all duration-300"></span>
                 </a>
-                <a href="#" class="text-lg font-medium text-white hover:text-gray-300 transition-colors duration-200 relative group" onclick="navigateTo('about'); return false;">
+                <a href="#" class="text-lg font-medium text-white hover:text-gray-300 transition-colors duration-300 relative group" onclick="navigateTo('about'); return false;">
                     About
                     <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-white group-hover:w-full transition-all duration-300"></span>
                 </a>
@@ -186,12 +233,21 @@
         <p class="mt-2">Designed for concentration.</p>
     </footer>
 
+    <!-- Overlay for closing popup on outside click -->
+    <div id="overlay" class="overlay" onclick="hideLivePopup()"></div>
+
+    <!-- Live Popup -->
+    <div id="livePopup" class="live-popup hidden" onclick="window.open('https://www.youtube.com/live/reZBoGOuHNU?si=-dORKyyKsXF_H7vb', '_blank'); hideLivePopup();">
+        <span class="live-dot"></span>
+        <span>I am Live</span>
+    </div>
+
     <script>
         // Lucide Icon SVG definitions (simplified for direct use)
         const lucideIcons = {
             compass: `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto mb-4 text-white"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>`,
             trendingUp: `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto mb-4 text-white"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>`,
-            leaf: `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto mb-4 text-white"><path d="M11 20A7 7 0 0 1 9.86 6.76C4.65 6.53 2 11.23 2 13a4 4 0 0 0 4 4c1.73 0 5.02-2.14 6-3 1.25-1.03 2.15-2.17 2.88-3.46 3.34 1.56 5.67 5.19 9.38-1.5 9.08-13.21 16.14-21.5 16.5-1.9.09-3.2-.33-3.2-1.07V22l-1.5-1.5L2 19"/></svg>`,
+            leaf: `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto mb-4 text-white"><path d="M11 20A7 7 0 0 1 9.86 6.76C4.65 6.53 2 11.23 2 13a4 4 0  0 0 4 4c1.73 0 5.02-2.14 6-3 1.25-1.03 2.15-2.17 2.88-3.46 3.34 1.56 5.67 5.19 9.38-1.5 9.08-13.21 16.14-21.5 16.5-1.9.09-3.2-.33-3.2-1.07V22l-1.5-1.5L2 19"/></svg>`,
         };
 
         // Function to render Lucide Icons
@@ -366,9 +422,33 @@
         // Set current year in footer
         document.getElementById('current-year').textContent = new Date().getFullYear();
 
-        // Initial page load
+        // Live Popup Logic
+        const livePopup = document.getElementById('livePopup');
+        const overlay = document.getElementById('overlay'); // Get the overlay element
+
+        // Function to show popup
+        function showLivePopup() {
+            livePopup.classList.remove('hidden');
+            livePopup.classList.add('animate-popup-open-center'); // Use the new center animation
+            overlay.style.display = 'block'; // Show the overlay
+        }
+
+        // Function to hide popup
+        function hideLivePopup() {
+            livePopup.classList.add('hidden');
+            livePopup.classList.remove('animate-popup-open-center');
+            overlay.style.display = 'none'; // Hide the overlay
+        }
+
+        // Handle clicks outside the popup (on the overlay)
+        overlay.addEventListener('click', function(event) {
+            hideLivePopup();
+        });
+
+        // Show popup when the page loads
         document.addEventListener('DOMContentLoaded', () => {
             navigateTo('home'); // Load the home page by default
+            setTimeout(showLivePopup, 1000); // Show popup after 1 second
         });
     </script>
 </body>
