@@ -67,8 +67,8 @@
             0% { opacity: 0; transform: scale(0.8); }
             100% { opacity: 1; transform: scale(1); }
         }
-        /* Blinking effect for live button and popup */
-        @keyframes blink {
+        /* Blinking effect for new popup text */
+        @keyframes blinkText {
             0%, 100% { opacity: 1; }
             50% { opacity: 0; }
         }
@@ -93,7 +93,7 @@
             background-position: 0 0, 10px 0, 10px -10px, 0px 10px;
         }
         .animate-zoom-in-fade-in { animation: zoomInFadeIn 1s ease-out forwards 0.5s; } /* Added delay for smooth transition */
-        .animate-blink { animation: blink 1s infinite; }
+        .animate-blink-text { animation: blinkText 1s infinite; }
         .animate-popup-open-center { animation: popupOpenCenter 0.5s ease-out forwards; }
 
 
@@ -125,54 +125,40 @@
             border: none; /* Removing previous border */
         }
 
-        /* Live button specific styling */
-        .live-button {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px; /* Space between dot and text */
-            padding: 8px 12px;
-            background-color: #c00; /* Red background for the button itself */
-            color: white;
-            font-weight: bold;
-            border-radius: 9999px; /* Full rounded corners */
-            transition: background-color 0.3s ease;
-        }
-        .live-button:hover {
-            background-color: #e00;
-        }
-        .live-dot {
-            width: 8px;
-            height: 8px;
-            background-color: #fff; /* White dot */
-            border-radius: 50%;
-            animation: blink 1s infinite;
-        }
-
-        /* Popup styling */
-        .live-popup {
+        /* New Popup styling */
+        .new-popup {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background-color: #c00;
+            background-color: #1a1a1a; /* Darker background for contrast */
             color: white;
-            padding: 20px 30px; /* Increased padding for larger size */
-            border-radius: 15px; /* Slightly more rounded */
-            font-size: 1.8rem; /* Larger font size */
-            font-weight: bold;
+            padding: 25px 35px;
+            border-radius: 15px;
             z-index: 1000; /* Ensure it's on top of everything */
             display: flex;
+            flex-direction: column; /* Stack text and image vertically */
             align-items: center;
-            justify-content: center; /* Center content horizontally */
-            gap: 15px; /* More space between dot and text */
-            box-shadow: 0 8px 25px rgba(0,0,0,0.6); /* More prominent shadow */
-            cursor: pointer; /* Indicate it's clickable */
+            gap: 20px; /* Space between text and image */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7); /* More prominent shadow */
             opacity: 0; /* Hidden by default for animation */
+            max-width: 90%; /* Responsive max width */
+            width: fit-content; /* Adjust width to content */
         }
-        .live-popup .live-dot {
-            background-color: white; /* Make dot white for contrast */
-            width: 15px; /* Larger dot */
-            height: 15px;
+        .new-popup-text {
+            font-size: 2.2rem; /* Larger font size for "Hi Deepak" */
+            font-weight: bold;
+            font-family: var(--font-playfair); /* Stylish font for the text */
+            text-align: center;
+            color: #d1d5db; /* Lighter grey for contrast */
+            animation: blinkText 1s infinite; /* Blinking effect on the text */
+        }
+        .new-popup-image {
+            max-width: 250px; /* Medium size for the image */
+            height: auto;
+            border: 5px solid #4a4a4a; /* Border for the image */
+            border-radius: 10px; /* Slightly rounded corners for the image */
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); /* Subtle shadow for image */
         }
 
         /* Overlay for disabling background interaction */
@@ -182,9 +168,23 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent black */
+            background-color: rgba(0, 0, 0, 0.7); /* Darker semi-transparent black */
             z-index: 999; /* Below popup, above content */
             display: none; /* Hidden by default */
+        }
+
+        /* Responsive adjustments for popup */
+        @media (max-width: 640px) {
+            .new-popup {
+                padding: 20px;
+                gap: 15px;
+            }
+            .new-popup-text {
+                font-size: 1.8rem;
+            }
+            .new-popup-image {
+                max-width: 180px; /* Smaller image on small screens */
+            }
         }
     </style>
 </head>
@@ -209,15 +209,11 @@
                     About
                     <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-white group-hover:w-full transition-all duration-300"></span>
                 </a>
-                <a href="#" class="text-lg font-medium text-white hover:text-gray-300 transition-colors duration-200 relative group" onclick="navigateTo('contact'); return false;">
+                <a href="#" class="text-lg font-medium text-white hover:text-gray-300 transition-colors duration-300 relative group" onclick="navigateTo('contact'); return false;">
                     Contact
                     <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-white group-hover:w-full transition-all duration-300"></span>
                 </a>
-                <!-- New Live button -->
-                <a href="https://www.youtube.com/live/reZBoGOuHNU?si=-dORKyyKsXF_H7vb" target="_blank" rel="noopener noreferrer" class="live-button">
-                    <span class="live-dot"></span>
-                    <span>Live</span>
-                </a>
+                <!-- Live button removed -->
             </div>
         </nav>
     </header>
@@ -234,12 +230,12 @@
     </footer>
 
     <!-- Overlay for closing popup on outside click -->
-    <div id="overlay" class="overlay" onclick="hideLivePopup()"></div>
+    <div id="overlay" class="overlay" onclick="hideNewPopup()"></div>
 
-    <!-- Live Popup -->
-    <div id="livePopup" class="live-popup hidden" onclick="window.open('https://www.youtube.com/live/reZBoGOuHNU?si=-dORKyyKsXF_H7vb', '_blank'); hideLivePopup();">
-        <span class="live-dot"></span>
-        <span>I am Live</span>
+    <!-- New Popup -->
+    <div id="newPopup" class="new-popup hidden">
+        <h2 class="new-popup-text">Hi Deepak</h2>
+        <img src="https://i.postimg.cc/rm50Kpy7/Whats-App-Image-2025-06-23-at-16-39-45-4c4d8487.jpg" alt="Greeting Image" class="new-popup-image">
     </div>
 
     <script>
@@ -394,7 +390,7 @@
                 threshold: 0.2, // Trigger when 20% of the item is visible
             };
 
-            featureObserver = new IntersectionObserver((entries) => {
+            featureObserver = new IntersectionObserver((entries) => { // Corrected: use featureObserver
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
                         entry.target.classList.add('animate-fade-in-up-staggered');
@@ -404,7 +400,7 @@
             }, observerOptions);
 
             featureCards.forEach(card => {
-                featureObserver.observe(card);
+                featureObserver.observe(card); // Corrected: use featureObserver
             });
         }
 
@@ -422,33 +418,33 @@
         // Set current year in footer
         document.getElementById('current-year').textContent = new Date().getFullYear();
 
-        // Live Popup Logic
-        const livePopup = document.getElementById('livePopup');
-        const overlay = document.getElementById('overlay'); // Get the overlay element
+        // New Popup Logic
+        const newPopup = document.getElementById('newPopup');
+        const overlay = document.getElementById('overlay');
 
-        // Function to show popup
-        function showLivePopup() {
-            livePopup.classList.remove('hidden');
-            livePopup.classList.add('animate-popup-open-center'); // Use the new center animation
-            overlay.style.display = 'block'; // Show the overlay
+        // Function to show the new popup
+        function showNewPopup() {
+            newPopup.classList.remove('hidden');
+            newPopup.classList.add('animate-popup-open-center');
+            overlay.style.display = 'block';
         }
 
-        // Function to hide popup
-        function hideLivePopup() {
-            livePopup.classList.add('hidden');
-            livePopup.classList.remove('animate-popup-open-center');
-            overlay.style.display = 'none'; // Hide the overlay
+        // Function to hide the new popup
+        function hideNewPopup() {
+            newPopup.classList.add('hidden');
+            newPopup.classList.remove('animate-popup-open-center');
+            overlay.style.display = 'none';
         }
 
         // Handle clicks outside the popup (on the overlay)
         overlay.addEventListener('click', function(event) {
-            hideLivePopup();
+            hideNewPopup();
         });
 
-        // Show popup when the page loads
+        // Show new popup when the page loads
         document.addEventListener('DOMContentLoaded', () => {
             navigateTo('home'); // Load the home page by default
-            setTimeout(showLivePopup, 1000); // Show popup after 1 second
+            setTimeout(showNewPopup, 1000); // Show popup after 1 second
         });
     </script>
 </body>
